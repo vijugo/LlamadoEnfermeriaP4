@@ -1,0 +1,16 @@
+{
+  "codename": "Montserrat160",
+  "ttf_path": "/assets/fonts/Montserrat-Medium.ttf",
+  "bin_path": "/assets/fonts/ui_font_Montserrat160.bin",
+  "c_path": "/assets/fonts/ui_font_Montserrat160.c",
+  "cfg_path": "/assets/fonts/ui_font_Montserrat160.fcfg",
+  "size": 160,
+  "bpp": 1,
+  "letters": 0,
+  "ranges": [
+    "0x20-0x7f"
+  ],
+  "symbols": "",
+  "customparams": "--no-compress --no-prefilter",
+  "uploaded": false
+}

@@ -1,0 +1,366 @@
+#include "ui.h"
+#include "drivers/codec.h"
+#include "drivers/sd_card.h"
+#include "esp_lvgl_port.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+LV_IMAGE_DECLARE(energy_meter);
+LV_IMAGE_DECLARE(water_meter);
+LV_IMAGE_DECLARE(test_image); // Compiled image for Gas Meter/Test
+
+static lv_obj_t *scr1;
+static lv_obj_t *scr2;
+static lv_obj_t *scr3;
+static lv_obj_t *scr_arranque;
+static lv_obj_t *scr_espera;
+
+static lv_obj_t *lbl_version;
+static lv_obj_t *lbl_wifi_status;
+static lv_obj_t *lbl_sd_status;
+static lv_obj_t *lbl_grande_hora;
+static lv_obj_t *lbl_grande_fecha;
+
+static void load_scr1(void);
+static void load_scr2(void);
+static void load_scr3(void);
+
+// --- NAVIGATION CALLBACKS ---
+static void btn_next_scr_event_cb(lv_event_t *e) {
+  lv_event_code_t code = lv_event_get_code(e);
+  if (code == LV_EVENT_PRESSED) {
+    printf("UI: Next Button PRESSED\n");
+  } else if (code == LV_EVENT_CLICKED) {
+    printf("UI: Next Button CLICKED -> Changing Screen\n");
+    lv_obj_t *current_scr = lv_scr_act();
+    if (current_scr == scr1)
+      load_scr2();
+    else if (current_scr == scr2)
+      load_scr3();
+    else if (current_scr == scr3)
+      load_scr1();
+  }
+}
+
+static void btn_prev_scr_event_cb(lv_event_t *e) {
+  lv_event_code_t code = lv_event_get_code(e);
+  if (code == LV_EVENT_PRESSED) {
+    printf("UI: Prev Button PRESSED\n");
+  } else if (code == LV_EVENT_CLICKED) {
+    printf("UI: Prev Button CLICKED -> Changing Screen\n");
+    lv_obj_t *current_scr = lv_scr_act();
+    if (current_scr == scr2)
+      load_scr1();
+    else if (current_scr == scr3)
+      load_scr2();
+  }
+}
+
+// --- HELPER TO CREATE ARROWS ---
+// --- HELPER TO CREATE ARROWS ---
+static void create_nav_arrow(lv_obj_t *parent, const char *symbol,
+                             bool is_right) {
+  lv_obj_t *btn = lv_btn_create(parent);
+  lv_obj_set_size(btn, 100, 100);
+  lv_obj_add_flag(btn, LV_OBJ_FLAG_CLICKABLE);
+  // Style
+  lv_obj_set_style_bg_color(btn, lv_color_white(), LV_PART_MAIN);
+  lv_obj_set_style_bg_opa(btn, LV_OPA_80, LV_PART_MAIN);
+  lv_obj_set_style_shadow_width(btn, 20, LV_PART_MAIN);
+  lv_obj_set_style_shadow_color(btn, lv_color_black(), LV_PART_MAIN);
+
+  if (is_right) {
+    lv_obj_align(btn, LV_ALIGN_RIGHT_MID, -20, 0);
+    lv_obj_add_event_cb(btn, btn_next_scr_event_cb, LV_EVENT_CLICKED, NULL);
+  } else {
+    lv_obj_align(btn, LV_ALIGN_LEFT_MID, 20, 0);
+    lv_obj_add_event_cb(btn, btn_prev_scr_event_cb, LV_EVENT_CLICKED, NULL);
+  }
+
+  // Symbol label
+  lv_obj_t *label = lv_label_create(btn);
+  lv_label_set_text(label, symbol);
+  lv_obj_set_style_text_color(label, lv_color_black(), 0);
+  lv_obj_center(label);
+}
+
+// SCREEN 3: SD Card Image (NOW USING COMPILED ASSET FOR SPEED)
+static void load_scr3(void) {
+  if (scr3 == NULL) {
+    scr3 = lv_obj_create(NULL);
+    lv_obj_set_style_bg_color(scr3, lv_color_black(), LV_PART_MAIN);
+
+    // Image from Flash (Compiled) - MUCH FASTER
+    lv_obj_t *img = lv_image_create(scr3);
+    lv_image_set_src(img, &test_image);
+    lv_obj_center(img);
+
+    // Label Info
+    lv_obj_t *label = lv_label_create(scr3);
+    lv_label_set_text(label, "Screen 3: Gas Meter (Fast Load)");
+    lv_obj_align(label, LV_ALIGN_BOTTOM_MID, 0, -50);
+    lv_obj_set_style_text_color(label, lv_color_white(), 0);
+    lv_obj_set_style_bg_color(label, lv_color_black(), 0);
+    lv_obj_set_style_bg_opa(label, LV_OPA_50, 0);
+
+    create_nav_arrow(scr3, LV_SYMBOL_LEFT, false);
+    create_nav_arrow(scr3, LV_SYMBOL_RIGHT, true);
+  }
+  lv_scr_load(scr3);
+}
+
+// SCREEN 2: Water Meter
+static void load_scr2(void) {
+  if (scr2 == NULL) {
+    scr2 = lv_obj_create(NULL);
+    lv_obj_set_style_bg_color(scr2, lv_color_black(), LV_PART_MAIN);
+
+    // Background
+    lv_obj_t *bg = lv_image_create(scr2);
+    lv_image_set_src(bg, &water_meter);
+    lv_obj_center(bg);
+
+    // Navigation: Left Arrow -> Scr1, Right Arrow -> Scr3
+    create_nav_arrow(scr2, LV_SYMBOL_LEFT, false);
+    create_nav_arrow(scr2, LV_SYMBOL_RIGHT, true);
+  }
+  lv_scr_load(scr2);
+}
+
+// SCREEN 1: Energy Meter
+static void load_scr1(void) {
+  if (scr1 == NULL) {
+    scr1 = lv_obj_create(NULL);
+    lv_obj_set_style_bg_color(scr1, lv_color_black(), LV_PART_MAIN);
+
+    // Energy Meter Image
+    lv_obj_t *img = lv_image_create(scr1);
+    lv_image_set_src(img, &energy_meter);
+    lv_obj_center(img);
+
+    // Navigation: Right Arrow -> Scr2
+    create_nav_arrow(scr1, LV_SYMBOL_RIGHT, true);
+  }
+  lv_scr_load(scr1);
+}
+
+static lv_obj_t *wifi_label;
+static lv_obj_t *wifi_icon;
+static lv_obj_t *time_label;
+static lv_obj_t *date_label;
+
+void ui_set_wifi_status(bool connected, const char *ssid) {
+  if (!wifi_label || !wifi_icon)
+    return;
+  if (connected) {
+    lv_label_set_text_fmt(wifi_label, "Connected: %s", ssid);
+    lv_label_set_text(wifi_icon, LV_SYMBOL_WIFI);
+  } else {
+    lv_label_set_text(wifi_label, "Disconnected");
+    lv_label_set_text(wifi_icon, LV_SYMBOL_CLOSE);
+  }
+}
+
+static void create_status_bar(void) {
+  lv_obj_t *layer = lv_layer_top();
+  lv_obj_t *bar = lv_obj_create(layer);
+  lv_obj_set_size(bar, LV_PCT(100), 50);
+  lv_obj_align(bar, LV_ALIGN_TOP_MID, 0, 0);
+  lv_obj_set_style_bg_opa(bar, LV_OPA_TRANSP, 0);
+  lv_obj_set_style_border_width(bar, 0, 0);
+
+  wifi_icon = lv_label_create(bar);
+  lv_label_set_text(wifi_icon, LV_SYMBOL_WIFI);
+  lv_obj_align(wifi_icon, LV_ALIGN_LEFT_MID, 10, 0);
+
+  wifi_label = lv_label_create(bar);
+  lv_obj_set_style_text_color(wifi_label, lv_color_hex(0x80D0FF), 0);
+  lv_label_set_text(wifi_label, "Initializing...");
+  lv_obj_align(wifi_label, LV_ALIGN_LEFT_MID, 40, 0);
+
+  // Time Label (Right side)
+  time_label = lv_label_create(bar);
+  lv_obj_set_style_text_color(time_label, lv_color_white(), 0);
+  lv_obj_set_style_text_font(time_label, &lv_font_montserrat_14,
+                             0); // Use M14 as M20 is not enabled
+  lv_label_set_text(time_label, "00:00:00");
+  lv_obj_align(time_label, LV_ALIGN_RIGHT_MID, -10, 0);
+
+  // Date Label (Center-ish)
+  date_label = lv_label_create(bar);
+  lv_obj_set_style_text_color(date_label, lv_color_hex(0xAAAAAA), 0);
+  lv_label_set_text(date_label, "2026-01-01");
+  lv_obj_align(date_label, LV_ALIGN_RIGHT_MID, -120, 0);
+
+  ui_set_wifi_status(false, "");
+}
+
+static void update_time_timer_cb(lv_timer_t *timer) {
+  time_t now;
+  struct tm timeinfo;
+  time(&now);
+
+  // Set timezone to Colombia (GMT-5) just in case
+  setenv("TZ", "EST5EDT,M3.2.0,M11.1.0", 1);
+  tzset();
+
+  localtime_r(&now, &timeinfo);
+
+  if (time_label) {
+    lv_label_set_text_fmt(time_label, "%02d:%02d:%02d", timeinfo.tm_hour,
+                          timeinfo.tm_min, timeinfo.tm_sec);
+  }
+  if (date_label) {
+    lv_label_set_text_fmt(date_label, "%04d-%02d-%02d", timeinfo.tm_year + 1900,
+                          timeinfo.tm_mon + 1, timeinfo.tm_mday);
+  }
+
+  // Actualizar etiquetas grandes en Pantalla de Espera si existen
+  if (lbl_grande_hora) {
+    lv_label_set_text_fmt(lbl_grande_hora, "%02d:%02d", timeinfo.tm_hour,
+                          timeinfo.tm_min);
+  }
+  if (lbl_grande_fecha) {
+    const char *meses[] = {"Enero",      "Febrero", "Marzo",     "Abril",
+                           "Mayo",       "Junio",   "Julio",     "Agosto",
+                           "Septiembre", "Octubre", "Noviembre", "Diciembre"};
+    lv_label_set_text_fmt(lbl_grande_fecha, "%s %02d, %d",
+                          meses[timeinfo.tm_mon], timeinfo.tm_mday,
+                          timeinfo.tm_year + 1900);
+  }
+}
+
+// --- SCREEN ARRANQUE ---
+void ui_show_screen_arranque(const char *version, const char *fecha) {
+  if (lvgl_port_lock(-1)) {
+    if (scr_arranque == NULL) {
+      scr_arranque = lv_obj_create(NULL);
+      lv_obj_set_style_bg_color(scr_arranque, lv_color_hex(0x0f172a),
+                                0); // Darker modern background
+      lv_obj_remove_flag(scr_arranque, LV_OBJ_FLAG_SCROLLABLE);
+
+      // Imagen Plantilla 01 (1280x800)
+      lv_obj_t *img = lv_image_create(scr_arranque);
+      lv_image_set_src(img, &img_plantilla_01);
+      lv_obj_center(img);
+
+      // Panel con desenfoque o solo texto elegante para resaltar
+      lbl_version = lv_label_create(scr_arranque);
+      lv_label_set_text_fmt(lbl_version, "Versión: %s - %s", version, fecha);
+      lv_obj_set_style_text_color(lbl_version, lv_color_white(), 0);
+      lv_obj_set_style_text_align(lbl_version, LV_TEXT_ALIGN_CENTER, 0);
+      lv_obj_set_style_text_font(lbl_version, &lv_font_montserrat_24, 0);
+      lv_obj_align(lbl_version, LV_ALIGN_BOTTOM_MID, 0, -20);
+    }
+    lv_scr_load(scr_arranque);
+    lvgl_port_unlock();
+  }
+}
+
+// --- SCREEN ESPERA ---
+void ui_show_screen_espera(void) {
+  if (lvgl_port_lock(-1)) {
+    if (scr_espera == NULL) {
+      scr_espera = lv_obj_create(NULL);
+      lv_obj_set_style_bg_color(scr_espera, lv_color_hex(0x0f172a), 0);
+      lv_obj_remove_flag(scr_espera, LV_OBJ_FLAG_SCROLLABLE);
+
+      // Imagen Espera Dashboard AI (1280x800)
+      lv_obj_t *bg = lv_image_create(scr_espera);
+      lv_image_set_src(bg, &hospital_idle_dashboard_bg);
+      lv_obj_center(bg);
+
+      // Contenedor para el reloj (Alineado con el recuadro superior derecho de
+      // la imagen)
+      lv_obj_t *panel_hora = lv_obj_create(scr_espera);
+      lv_obj_set_size(panel_hora, 480, 120);
+      lv_obj_align(panel_hora, LV_ALIGN_TOP_RIGHT, -40,
+                   45); // Ajuste fino al rectangulo negro
+      lv_obj_set_style_bg_opa(panel_hora, LV_OPA_TRANSP, 0);
+      lv_obj_set_style_border_width(panel_hora, 0, 0);
+
+      // Large Time
+      lbl_grande_hora = lv_label_create(panel_hora);
+      lv_obj_set_style_text_font(lbl_grande_hora, &lv_font_montserrat_48, 0);
+      lv_obj_set_style_text_color(lbl_grande_hora, lv_color_white(), 0);
+      lv_label_set_text(lbl_grande_hora, "12:30");
+      lv_obj_align(lbl_grande_hora, LV_ALIGN_TOP_MID, 0, 10);
+
+      // Large Date
+      lbl_grande_fecha = lv_label_create(panel_hora);
+      lv_obj_set_style_text_font(lbl_grande_fecha, &lv_font_montserrat_24, 0);
+      lv_obj_set_style_text_color(lbl_grande_fecha, lv_color_hex(0x64748b), 0);
+      lv_label_set_text(lbl_grande_fecha, "Marzo 06, 2026");
+      lv_obj_align(lbl_grande_fecha, LV_ALIGN_BOTTOM_MID, 0, -10);
+
+      // Label de Eventos (dentro del area blanca central)
+      lv_obj_t *lbl_eventos_header = lv_label_create(scr_espera);
+      lv_label_set_text(lbl_eventos_header, "LISTADO DE EVENTOS RECIENTES");
+      lv_obj_set_style_text_font(lbl_eventos_header, &lv_font_montserrat_24, 0);
+      lv_obj_set_style_text_color(lbl_eventos_header, lv_color_hex(0x1e293b),
+                                  0);
+      lv_obj_align(lbl_eventos_header, LV_ALIGN_TOP_LEFT, 260,
+                   240); // Posicion inicial del area blanca
+
+      // Contenedor de Estado del Sistema (Izquierda abajo)
+      lv_obj_t *panel_estado = lv_obj_create(scr_espera);
+      lv_obj_set_size(panel_estado, 300, 100);
+      lv_obj_align(panel_estado, LV_ALIGN_BOTTOM_LEFT, 20, -20);
+      lv_obj_set_style_bg_color(panel_estado, lv_color_black(), 0);
+      lv_obj_set_style_bg_opa(panel_estado, LV_OPA_50, 0);
+      lv_obj_set_style_border_width(panel_estado, 0, 0);
+
+      lbl_wifi_status = lv_label_create(panel_estado);
+      lv_label_set_text(lbl_wifi_status, "WiFi: Sin Red");
+      lv_obj_align(lbl_wifi_status, LV_ALIGN_TOP_LEFT, 10, 10);
+
+      lbl_sd_status = lv_label_create(panel_estado);
+      lv_label_set_text(lbl_sd_status, "SD: ...");
+      lv_obj_align(lbl_sd_status, LV_ALIGN_BOTTOM_LEFT, 10, -10);
+
+      // Config Button
+      lv_obj_t *btn_cfg = lv_btn_create(scr_espera);
+      lv_obj_set_size(btn_cfg, 150, 60);
+      lv_obj_align(btn_cfg, LV_ALIGN_BOTTOM_RIGHT, -20, -20);
+      lv_obj_set_style_bg_color(btn_cfg, lv_color_hex(0x3b82f6), 0);
+      lv_obj_set_style_radius(btn_cfg, 30, 0);
+
+      lv_obj_t *lbl_btn = lv_label_create(btn_cfg);
+      lv_obj_set_style_text_font(lbl_btn, &lv_font_montserrat_24, 0);
+      lv_label_set_text(lbl_btn, "Config");
+      lv_obj_center(lbl_btn);
+    }
+    lv_scr_load(scr_espera);
+    lvgl_port_unlock();
+  }
+}
+
+void ui_update_espera_data(bool wifi_ok, bool sd_ok) {
+  if (lvgl_port_lock(-1)) {
+    if (lbl_wifi_status) {
+      lv_label_set_text_fmt(lbl_wifi_status, "WiFi: %s",
+                            wifi_ok ? "OK" : "Error");
+      lv_obj_set_style_text_color(
+          lbl_wifi_status,
+          wifi_ok ? lv_color_hex(0x00FF00) : lv_color_hex(0xFF0000), 0);
+    }
+    if (lbl_sd_status) {
+      lv_label_set_text_fmt(lbl_sd_status, "SD: %s",
+                            sd_ok ? "Detectada" : "No encontrada");
+      lv_obj_set_style_text_color(
+          lbl_sd_status,
+          sd_ok ? lv_color_hex(0x00FF00) : lv_color_hex(0xFF0000), 0);
+    }
+    lvgl_port_unlock();
+  }
+}
+
+void ui_init(void) {
+  create_status_bar(); // Persistent on top layer
+
+  // Crear timer para actualizar reloj cada segundo
+  lv_timer_create(update_time_timer_cb, 1000, NULL);
+  // No cargamos scr1 inicialmente, dejaremos que la máquina de estados controle
+  // esto
+}

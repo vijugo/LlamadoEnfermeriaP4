@@ -1,0 +1,17 @@
+SET(SOURCES screens/ui_Screen1.c
+    screens/ui_Screen2.c
+    screens/ui_Screen3.c
+    ui.c
+    components/ui_comp_hook.c
+    ui_helpers.c
+    ui_events.c
+    images/ui_img_plantilla_01_png.c
+    images/ui_img_espera_png.c
+    images/ui_img_gear_8248448_png.c
+    images/ui_img_f_configura_png.c
+    images/ui_img_b_llamado_png.c
+    images/ui_img_b_historial_png.c
+    images/ui_img_b_configuracion_png.c
+    fonts/ui_font_Montserrat160.c)
+
+add_library(ui ${SOURCES})
