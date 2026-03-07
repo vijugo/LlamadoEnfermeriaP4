@@ -8,6 +8,9 @@ bool F_Configurar = false;
 bool F_Retornar_Llamado = false;
 bool F_Historial = false;
 bool F_Configura_Parmetros = false;
+bool F_Salir_Parametros = false;
+bool F_Grabar_Parametros = false;
+
 void Funcion_Configurar(lv_event_t *e) {
   // Your code here
   F_Configurar = true;
@@ -26,4 +29,14 @@ void Funcion_Historial(lv_event_t *e) {
 void Funcion_Configura_Parmetros(lv_event_t *e) {
   // Your code here
   F_Configura_Parmetros = true;
+}
+
+void Funcion_Salir_Parametros(lv_event_t *e) {
+  // Your code here
+  F_Salir_Parametros = true;
+}
+
+void Funcion_Grabar_Parametros(lv_event_t *e) {
+  // Your code here
+  F_Grabar_Parametros = true;
 }

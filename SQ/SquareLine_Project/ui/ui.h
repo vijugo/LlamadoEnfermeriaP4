@@ -19,6 +19,7 @@ extern "C" {
 #include "screens/ui_Screen1.h"
 #include "screens/ui_Screen2.h"
 #include "screens/ui_Screen3.h"
+#include "screens/ui_Screen4.h"
 
 ///////////////////// VARIABLES ////////////////////
 
@@ -33,6 +34,9 @@ LV_IMG_DECLARE( ui_img_f_configura_png);   // assets/F_Configura.png
 LV_IMG_DECLARE( ui_img_b_llamado_png);   // assets/B_Llamado.png
 LV_IMG_DECLARE( ui_img_b_historial_png);   // assets/B_Historial.png
 LV_IMG_DECLARE( ui_img_b_configuracion_png);   // assets/B_Configuracion.png
+LV_IMG_DECLARE( ui_img_fondohospital_png);   // assets/FondoHospital.png
+LV_IMG_DECLARE( ui_img_botongrandeerror_png);   // assets/BotonGrandeError.png
+LV_IMG_DECLARE( ui_img_botongrandeok_png);   // assets/BotonGrandeOK.png
 
 // FONTS
 LV_FONT_DECLARE( ui_font_Montserrat160);

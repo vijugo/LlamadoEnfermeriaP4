@@ -14,3 +14,11 @@ def Funcion_Historial(event_struct):
 def Funcion_Configura_Parmetros(event_struct):
     return
 
+
+def F_Grabar_Parametros(event_struct):
+    return
+
+
+def F_Salir_Parametros(event_struct):
+    return
+

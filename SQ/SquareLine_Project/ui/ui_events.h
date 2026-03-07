@@ -14,6 +14,8 @@ void Funcion_Configurar(lv_event_t * e);
 void Funcion_Retornar_Llamado(lv_event_t * e);
 void Funcion_Historial(lv_event_t * e);
 void Funcion_Configura_Parmetros(lv_event_t * e);
+void F_Salir_Parametros(lv_event_t * e);
+void F_Grabar_Parametros(lv_event_t * e);
 
 #ifdef __cplusplus
 } /*extern "C"*/

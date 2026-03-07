@@ -11,6 +11,7 @@
 #include "lvgl.h"
 #include "network/ntp.h"
 #include "network/wifi.h"
+#include "nvs_flash.h"
 #include "ui/ui.h"
 #include <stdio.h>
 #include <string.h>
@@ -89,6 +90,14 @@ static void lv_fs_setup(void) {
 }
 
 void app_main(void) {
+  esp_err_t ret = nvs_flash_init();
+  if (ret == ESP_ERR_NVS_NO_FREE_PAGES ||
+      ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+    ESP_ERROR_CHECK(nvs_flash_erase());
+    ret = nvs_flash_init();
+  }
+  ESP_ERROR_CHECK(ret);
+
   ESP_LOGE("VERIFY", "!!! SYSTEM START V5.4 (FS DRIVER) !!!");
   init_led();
   set_led_color(0, 0, 255);
