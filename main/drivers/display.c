@@ -169,8 +169,8 @@ void display_init(void) {
   gpio_set_level(26, 1);
 
   // 5. LVGL Display Creation
-  // Allocate buffer in SPIRAM (1/10th of screen)
-  size_t buffer_size_pixels = LCD_H_RES * LCD_V_RES / 10;
+  // Allocate buffer in SPIRAM (1/5 of screen)
+  size_t buffer_size_pixels = LCD_H_RES * LCD_V_RES / 5;
   size_t buffer_size_bytes = buffer_size_pixels * sizeof(uint16_t);
 
   // Align the buffer size to cache line size (64 bytes on ESP32-P4)

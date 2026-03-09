@@ -15,7 +15,7 @@ void time_sync_notification_cb(struct timeval *tv) {
   time(&now);
 
   // Set timezone to Colombia (GMT-5)
-  setenv("TZ", "EST5EDT,M3.2.0,M11.1.0", 1);
+  setenv("TZ", "COT5", 1);
   tzset();
 
   localtime_r(&now, &timeinfo);

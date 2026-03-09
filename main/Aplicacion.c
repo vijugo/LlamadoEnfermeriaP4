@@ -3,6 +3,8 @@
 #include "drivers/rtc.h"
 #include "drivers/sd_card.h"
 #include "esp_log.h"
+#include "esp_spiffs.h"
+#include "esp_vfs.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "network/wifi.h"
@@ -11,6 +13,7 @@
 #include "ui/ui.h"
 #include "ui/ui_events.h"
 #include "ui/ui_manual_helpers.h"
+#include <stdio.h>
 
 static const char *TAG = "aplicacion";
 static aplicacion_estado_t estado_actual = ST_APLICACION_ARRANQUE;
@@ -31,8 +34,7 @@ void aplicacion_loop_task(void *pvParameters) {
     switch (estado_actual) {
     case ST_APLICACION_ARRANQUE:
       if (ticks_en_estado == 1) {
-        ESP_LOGI(TAG, "Estado: ARRANQUE. Mostrando SquareLine Screen1");
-        ui_init();
+        ESP_LOGI(TAG, "Estado: ARRANQUE. Esperando...");
       }
 
       // Espera 5 segundos (5000ms / 100ms = 50 ticks)
@@ -155,15 +157,17 @@ void aplicacion_loop_task(void *pvParameters) {
 }
 
 void aplicacion_init(void) {
+  ESP_LOGI(TAG, "SPIFFS ya inicializado desde main.c");
+
   // Cargar volumen de NVS
-  nvs_handle_t my_handle;
-  if (nvs_open("storage", NVS_READONLY, &my_handle) == ESP_OK) {
+  nvs_handle_t lv_my_handle;
+  if (nvs_open("storage", NVS_READONLY, &lv_my_handle) == ESP_OK) {
     int32_t val;
-    if (nvs_get_i32(my_handle, "volume", &val) == ESP_OK) {
+    if (nvs_get_i32(lv_my_handle, "volume", &val) == ESP_OK) {
       volumen_actual = (int)val;
       ESP_LOGI(TAG, "Volumen recuperado de NVS: %d", volumen_actual);
     }
-    nvs_close(my_handle);
+    nvs_close(lv_my_handle);
   }
   codec_set_volume(volumen_actual);
 

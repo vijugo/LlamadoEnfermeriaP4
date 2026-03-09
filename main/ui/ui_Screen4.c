@@ -3,6 +3,7 @@
 // LVGL version: 9.3
 // Project name: LlamadoEnfermeria
 
+#include "psram_images.h"
 #include "ui.h"
 #include "ui_manual_helpers.h"
 
@@ -23,7 +24,7 @@ lv_obj_t *ui_Label10 = NULL;
 void ui_event_ImgButton1(lv_event_t *e) {
   lv_event_code_t event_code = lv_event_get_code(e);
 
-  if (event_code == LV_EVENT_RELEASED) {
+  if (event_code == LV_EVENT_CLICKED || event_code == LV_EVENT_RELEASED) {
     Funcion_Salir_Parametros(e);
   }
 }
@@ -31,7 +32,7 @@ void ui_event_ImgButton1(lv_event_t *e) {
 void ui_event_ImgButton2(lv_event_t *e) {
   lv_event_code_t event_code = lv_event_get_code(e);
 
-  if (event_code == LV_EVENT_RELEASED) {
+  if (event_code == LV_EVENT_CLICKED || event_code == LV_EVENT_RELEASED) {
     Funcion_Grabar_Parametros(e);
   }
 }
@@ -41,7 +42,7 @@ void ui_event_ImgButton2(lv_event_t *e) {
 void ui_Screen4_screen_init(void) {
   ui_Screen4 = lv_obj_create(NULL);
   lv_obj_remove_flag(ui_Screen4, LV_OBJ_FLAG_SCROLLABLE); /// Flags
-  lv_obj_set_style_bg_image_src(ui_Screen4, &ui_img_fondohospital_png,
+  lv_obj_set_style_bg_image_src(ui_Screen4, img_fondohospital,
                                 LV_PART_MAIN | LV_STATE_DEFAULT);
   lv_obj_set_style_bg_image_opa(ui_Screen4, 255,
                                 LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -68,27 +69,43 @@ void ui_Screen4_screen_init(void) {
     lv_obj_set_style_pad_right(
         ui_Slider1, lv_obj_get_style_pad_right(ui_Slider1, LV_PART_MAIN) + 1,
         LV_PART_MAIN);
-  ui_ImgButton1 = lv_imagebutton_create(ui_Screen4);
-  lv_imagebutton_set_src(ui_ImgButton1, LV_IMAGEBUTTON_STATE_RELEASED, NULL,
-                         &ui_img_botongrandeerror_png, NULL);
-  lv_obj_set_width(ui_ImgButton1, 255);
-  lv_obj_set_height(ui_ImgButton1, 255);
+  // Botón 1 (Error/Cancelar) envuelto en contenedor de 100x100
+  ui_ImgButton1 = lv_obj_create(ui_Screen4);
+  lv_obj_set_width(ui_ImgButton1, 100);
+  lv_obj_set_height(ui_ImgButton1, 100);
   lv_obj_set_x(ui_ImgButton1, 450);
   lv_obj_set_y(ui_ImgButton1, 280);
   lv_obj_set_align(ui_ImgButton1, LV_ALIGN_CENTER);
-  lv_obj_set_style_transform_scale(ui_ImgButton1, 100,
-                                   LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_remove_flag(ui_ImgButton1, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_add_flag(ui_ImgButton1, LV_OBJ_FLAG_CLICKABLE);
+  lv_obj_set_style_bg_opa(ui_ImgButton1, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_border_width(ui_ImgButton1, 0,
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
 
-  ui_ImgButton2 = lv_imagebutton_create(ui_Screen4);
-  lv_imagebutton_set_src(ui_ImgButton2, LV_IMAGEBUTTON_STATE_RELEASED, NULL,
-                         &ui_img_botongrandeok_png, NULL);
-  lv_obj_set_width(ui_ImgButton2, 255);
-  lv_obj_set_height(ui_ImgButton2, 255);
+  lv_obj_t *img1 = lv_image_create(ui_ImgButton1);
+  lv_image_set_src(img1, img_botongrandeerror);
+  lv_obj_align(img1, LV_ALIGN_CENTER, 0, 0);
+  lv_image_set_scale(img1, 100); // 39% scale (255 -> 100)
+  lv_obj_remove_flag(img1, LV_OBJ_FLAG_CLICKABLE);
+
+  // Botón 2 (OK/Guardar) envuelto en contenedor de 100x100
+  ui_ImgButton2 = lv_obj_create(ui_Screen4);
+  lv_obj_set_width(ui_ImgButton2, 100);
+  lv_obj_set_height(ui_ImgButton2, 100);
   lv_obj_set_x(ui_ImgButton2, 180);
   lv_obj_set_y(ui_ImgButton2, 280);
   lv_obj_set_align(ui_ImgButton2, LV_ALIGN_CENTER);
-  lv_obj_set_style_transform_scale(ui_ImgButton2, 100,
-                                   LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_remove_flag(ui_ImgButton2, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_add_flag(ui_ImgButton2, LV_OBJ_FLAG_CLICKABLE);
+  lv_obj_set_style_bg_opa(ui_ImgButton2, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_border_width(ui_ImgButton2, 0,
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
+
+  lv_obj_t *img2 = lv_image_create(ui_ImgButton2);
+  lv_image_set_src(img2, img_botongrandeok);
+  lv_obj_align(img2, LV_ALIGN_CENTER, 0, 0);
+  lv_image_set_scale(img2, 100);
+  lv_obj_remove_flag(img2, LV_OBJ_FLAG_CLICKABLE);
 
   ui_Label8 = lv_label_create(ui_Screen4);
   lv_obj_set_width(ui_Label8, LV_SIZE_CONTENT);  /// 1
@@ -114,11 +131,11 @@ void ui_Screen4_screen_init(void) {
                      LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE); /// Flags
 
   ui_Roller1 = lv_roller_create(ui_Container1);
-  lv_roller_set_options(
-      ui_Roller1,
-      "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n2"
-      "1\n22\n23\n24\n25\n26\n27\n28\n28\n30\n31\n",
-      LV_ROLLER_MODE_NORMAL);
+  lv_roller_set_options(ui_Roller1,
+                        "31\n30\n29\n28\n27\n26\n25\n24\n23\n22\n21\n20\n19\n18"
+                        "\n17\n16\n15\n14\n13\n12\n1"
+                        "1\n10\n9\n8\n7\n6\n5\n4\n3\n2\n1",
+                        LV_ROLLER_MODE_NORMAL);
   lv_obj_set_height(ui_Roller1, 467);
   lv_obj_set_width(ui_Roller1, LV_SIZE_CONTENT); /// 1
   lv_obj_set_x(ui_Roller1, -286);
@@ -129,7 +146,7 @@ void ui_Screen4_screen_init(void) {
 
   ui_Roller2 = lv_roller_create(ui_Container1);
   lv_roller_set_options(
-      ui_Roller2, "ENE\nFEB\nMAR\nABR\nMAY\nJUN\nJUL\nAGO\nSEP\nOCT\nNOV\nDIC",
+      ui_Roller2, "DIC\nNOV\nOCT\nSEP\nAGO\nJUL\nJUN\nMAY\nABR\nMAR\nFEB\nENE",
       LV_ROLLER_MODE_NORMAL);
   lv_obj_set_height(ui_Roller2, 465);
   lv_obj_set_width(ui_Roller2, LV_SIZE_CONTENT); /// 1
@@ -141,7 +158,7 @@ void ui_Screen4_screen_init(void) {
 
   ui_Roller3 = lv_roller_create(ui_Container1);
   lv_roller_set_options(ui_Roller3,
-                        "2026\n2027\n2028\n2029\n2030\n2031\n2032\n2033\n",
+                        "2033\n2032\n2031\n2030\n2029\n2028\n2027\n2026",
                         LV_ROLLER_MODE_NORMAL);
   lv_obj_set_height(ui_Roller3, 464);
   lv_obj_set_width(ui_Roller3, LV_SIZE_CONTENT); /// 1
@@ -153,8 +170,8 @@ void ui_Screen4_screen_init(void) {
 
   ui_Roller4 = lv_roller_create(ui_Container1);
   lv_roller_set_options(ui_Roller4,
-                        "00\n01\n02\n03\n04\n05\n06\n07\n08\n09\n10\n11\n12\n13"
-                        "\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23",
+                        "23\n22\n21\n20\n19\n18\n17\n16\n15\n14\n13\n12\n11\n10"
+                        "\n09\n08\n07\n06\n05\n04\n03\n02\n01\n00",
                         LV_ROLLER_MODE_NORMAL);
   lv_obj_set_height(ui_Roller4, 463);
   lv_obj_set_width(ui_Roller4, LV_SIZE_CONTENT); /// 1
@@ -167,10 +184,10 @@ void ui_Screen4_screen_init(void) {
   ui_Roller5 = lv_roller_create(ui_Container1);
   lv_roller_set_options(
       ui_Roller5,
-      "00\n01\n02\n03\n04\n05\n06\n07\n08\n09\n10\n11\n12\n13\n14\n15\n16\n17\n"
-      "18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n28\n28\n30\n31\n32\n33\n34\n35\n"
-      "36\n37\n38\n39\n40\n41\n42\n43\n44\n45\n46\n47\n48\n49\n50\n51\n52\n53\n"
-      "54\n55\n56\n57\n58\n59",
+      "59\n58\n57\n56\n55\n54\n53\n52\n51\n50\n49\n48\n47\n46\n45\n44\n43\n42\n"
+      "41\n40\n39\n38\n37\n36\n35\n34\n33\n32\n31\n30\n29\n28\n27\n26\n25\n24\n"
+      "23\n22\n21\n20\n19\n18\n17\n16\n15\n14\n13\n12\n11\n10\n09\n08\n07\n06\n"
+      "05\n04\n03\n02\n01\n00",
       LV_ROLLER_MODE_NORMAL);
   lv_obj_set_height(ui_Roller5, 466);
   lv_obj_set_width(ui_Roller5, LV_SIZE_CONTENT); /// 1
@@ -206,8 +223,7 @@ void ui_Screen4_screen_init(void) {
   lv_obj_add_event_cb(ui_ImgButton1, ui_event_ImgButton1, LV_EVENT_ALL, NULL);
   lv_obj_add_event_cb(ui_ImgButton2, ui_event_ImgButton2, LV_EVENT_ALL, NULL);
 
-  // Limpiar eventos residuales del slider para que no se salga al moverlo
-  lv_obj_remove_event_cb(ui_Slider1, NULL);
+  // Conectar SOLO el de volumen
   lv_obj_add_event_cb(ui_Slider1, ui_event_slider_volume,
                       LV_EVENT_VALUE_CHANGED, NULL);
 }

@@ -7,11 +7,14 @@
 #include "drivers/touch.h"
 #include "esp_log.h"
 #include "esp_lvgl_port.h"
+#include "esp_spiffs.h"
 #include "led_strip.h"
 #include "lvgl.h"
 #include "network/ntp.h"
 #include "network/wifi.h"
 #include "nvs_flash.h"
+#include "src/misc/cache/instance/lv_image_cache.h"
+#include "ui/psram_images.h"
 #include "ui/ui.h"
 #include <stdio.h>
 #include <string.h>
@@ -34,11 +37,30 @@ void init_led(void) {
       led_strip_new_rmt_device(&strip_config, &rmt_config, &led_strip));
 }
 
-// --- LVGL FILE SYSTEM DRIVER (S: -> /sd) ---
+// --- LVGL FILE SYSTEM DRIVERS ---
 
 static void *lv_sd_open(lv_fs_drv_t *drv, const char *path, lv_fs_mode_t mode) {
   char full_path[128];
   snprintf(full_path, sizeof(full_path), "/sd/%s", path);
+  const char *flags = "";
+  if (mode == LV_FS_MODE_WR)
+    flags = "wb";
+  else if (mode == LV_FS_MODE_RD)
+    flags = "rb";
+  else if (mode == (LV_FS_MODE_WR | LV_FS_MODE_RD))
+    flags = "rb+";
+  return fopen(full_path, flags);
+}
+
+static void *lv_spiffs_open(lv_fs_drv_t *drv, const char *path,
+                            lv_fs_mode_t mode) {
+  char full_path[128];
+  if (path[0] == '/') {
+    snprintf(full_path, sizeof(full_path), "/spiffs%s", path);
+  } else {
+    snprintf(full_path, sizeof(full_path), "/spiffs/%s", path);
+  }
+
   const char *flags = "";
   if (mode == LV_FS_MODE_WR)
     flags = "wb";
@@ -77,16 +99,29 @@ static lv_fs_res_t lv_sd_tell(lv_fs_drv_t *drv, void *file_p, uint32_t *pos_p) {
 }
 
 static void lv_fs_setup(void) {
-  static lv_fs_drv_t drv;
-  lv_fs_drv_init(&drv);
-  drv.letter = 'S'; // Drive letter: S
-  drv.open_cb = lv_sd_open;
-  drv.close_cb = lv_sd_close;
-  drv.read_cb = lv_sd_read;
-  drv.seek_cb = lv_sd_seek;
-  drv.tell_cb = lv_sd_tell;
-  lv_fs_drv_register(&drv);
+  // SD Card Driver (S:)
+  static lv_fs_drv_t sd_drv;
+  lv_fs_drv_init(&sd_drv);
+  sd_drv.letter = 'S';
+  sd_drv.open_cb = lv_sd_open;
+  sd_drv.close_cb = lv_sd_close;
+  sd_drv.read_cb = lv_sd_read;
+  sd_drv.seek_cb = lv_sd_seek;
+  sd_drv.tell_cb = lv_sd_tell;
+  lv_fs_drv_register(&sd_drv);
   ESP_LOGI(TAG, "LVGL FS Driver 'S:' registered mapped to /sd");
+
+  // SPIFFS Driver (A: for Assets)
+  static lv_fs_drv_t spiffs_drv;
+  lv_fs_drv_init(&spiffs_drv);
+  spiffs_drv.letter = 'A';
+  spiffs_drv.open_cb = lv_spiffs_open;
+  spiffs_drv.close_cb = lv_sd_close; // Reusing generic FILE* callbacks
+  spiffs_drv.read_cb = lv_sd_read;
+  spiffs_drv.seek_cb = lv_sd_seek;
+  spiffs_drv.tell_cb = lv_sd_tell;
+  lv_fs_drv_register(&spiffs_drv);
+  ESP_LOGI(TAG, "LVGL FS Driver 'A:' registered mapped to /spiffs");
 }
 
 void app_main(void) {
@@ -98,48 +133,48 @@ void app_main(void) {
   }
   ESP_ERROR_CHECK(ret);
 
-  ESP_LOGE("VERIFY", "!!! SYSTEM START V5.4 (FS DRIVER) !!!");
+  ESP_LOGE("VERIFY", "!!! SYSTEM START V5.5 (ASSETS IN SPIFFS) !!!");
   init_led();
   set_led_color(0, 0, 255);
 
+  // 1. MONTAR SPIFFS ANTES QUE NADA
+  ESP_LOGI(TAG, "Montando partición SPIFFS...");
+  esp_vfs_spiffs_conf_t spiffs_conf = {.base_path = "/spiffs",
+                                       .partition_label = "storage",
+                                       .max_files = 10,
+                                       .format_if_mount_failed = true};
+  esp_err_t sp_ret = esp_vfs_spiffs_register(&spiffs_conf);
+  if (sp_ret != ESP_OK) {
+    ESP_LOGE(TAG, "FALLO AL MONTAR SPIFFS: %s", esp_err_to_name(sp_ret));
+  } else {
+    size_t total = 0, used = 0;
+    esp_spiffs_info("storage", &total, &used);
+    ESP_LOGI(TAG, "SPIFFS OK. Total: %d, Usado: %d", total, used);
+  }
+
+  // 2. INICIALIZAR LVGL PORT
   lvgl_port_cfg_t lvgl_cfg = ESP_LVGL_PORT_INIT_CONFIG();
-  lvgl_cfg.task_stack = 64 * 1024; // 64KB Stack for LVGL Task
+  lvgl_cfg.task_stack = 64 * 1024;
   ESP_ERROR_CHECK(lvgl_port_init(&lvgl_cfg));
 
+  // 3. HARDWARE ADICIONAL
   sd_card_init();
 
   if (lvgl_port_lock(-1)) {
-    // REGISTER FILE SYSTEM DRIVER!!!
-    lv_fs_setup();
+    lv_fs_setup(); // Registrar drivers A: y S:
 
     display_init();
     touch_init();
     rtc_init();
     codec_init();
+
+    init_psram_images();
+
     ui_init();
-    aplicacion_init();
+    lv_image_cache_resize(8 * 1024 * 1024, true);
 
-    // Print RTC Time
-    struct tm now;
-    if (rtc_get_time(&now) == ESP_OK) {
-      ESP_LOGI(TAG, "Current RTC Time: %04d-%02d-%02d %02d:%02d:%02d",
-               now.tm_year + 1900, now.tm_mon + 1, now.tm_mday, now.tm_hour,
-               now.tm_min, now.tm_sec);
-    }
+    aplicacion_init(); // Iniciar lógica principal
 
-    // Test File Access
-    FILE *f = fopen("/sd/test.jpg", "rb");
-    if (f) {
-      ESP_LOGI(TAG, "File /sd/test.jpg FOUND!");
-      fclose(f);
-      set_led_color(0, 255, 0);
-    } else {
-      ESP_LOGE(TAG, "File /sd/test.jpg NOT FOUND!");
-      set_led_color(255, 0, 0);
-    }
-
-    // ui_init(); // Removed duplicate call
-    // aplicacion_init(); // Moved after ui_init (already called above)
     lvgl_port_unlock();
   }
 

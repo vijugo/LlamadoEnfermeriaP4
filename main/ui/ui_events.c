@@ -13,43 +13,31 @@ bool F_Salir_Parametros = false;
 bool F_Grabar_Parametros = false;
 
 void Funcion_Configurar(lv_event_t *e) {
-  if (lv_event_get_code(e) == LV_EVENT_RELEASED) {
-    ESP_LOGW("UI_EVENTS", "FLAG: F_Configurar set");
-    F_Configurar = true;
-  }
+  ESP_LOGW("UI_EVENTS", "FLAG: F_Configurar set");
+  F_Configurar = true;
 }
 
 void Funcion_Retornar_Llamado(lv_event_t *e) {
-  if (lv_event_get_code(e) == LV_EVENT_RELEASED) {
-    ESP_LOGW("UI_EVENTS", "FLAG: F_Retornar_Llamado set");
-    F_Retornar_Llamado = true;
-  }
+  ESP_LOGW("UI_EVENTS", "FLAG: F_Retornar_Llamado set");
+  F_Retornar_Llamado = true;
 }
 
 void Funcion_Historial(lv_event_t *e) {
-  if (lv_event_get_code(e) == LV_EVENT_RELEASED) {
-    ESP_LOGW("UI_EVENTS", "FLAG: F_Historial set");
-    F_Historial = true;
-  }
+  ESP_LOGW("UI_EVENTS", "FLAG: F_Historial set");
+  F_Historial = true;
 }
 
 void Funcion_Configura_Parmetros(lv_event_t *e) {
-  if (lv_event_get_code(e) == LV_EVENT_RELEASED) {
-    ESP_LOGW("UI_EVENTS", "FLAG: F_Configura_Parmetros set");
-    F_Configura_Parmetros = true;
-  }
+  ESP_LOGW("UI_EVENTS", "FLAG: F_Configura_Parmetros set");
+  F_Configura_Parmetros = true;
 }
 
 void Funcion_Salir_Parametros(lv_event_t *e) {
-  if (lv_event_get_code(e) == LV_EVENT_RELEASED) {
-    ESP_LOGW("UI_EVENTS", "FLAG: F_Salir_Parametros set");
-    F_Salir_Parametros = true;
-  }
+  ESP_LOGW("UI_EVENTS", "FLAG: F_Salir_Parametros set");
+  F_Salir_Parametros = true;
 }
 
 void Funcion_Grabar_Parametros(lv_event_t *e) {
-  if (lv_event_get_code(e) == LV_EVENT_RELEASED) {
-    ESP_LOGW("UI_EVENTS", "FLAG: F_Grabar_Parametros set");
-    F_Grabar_Parametros = true;
-  }
+  ESP_LOGW("UI_EVENTS", "FLAG: F_Grabar_Parametros set");
+  F_Grabar_Parametros = true;
 }

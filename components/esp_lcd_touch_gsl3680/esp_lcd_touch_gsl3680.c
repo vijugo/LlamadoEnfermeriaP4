@@ -426,9 +426,41 @@ static bool esp_lcd_touch_gsl3680_get_xy(esp_lcd_touch_handle_t tp, uint16_t *x,
   else
     *point_num = max_point_num;
   for (int i = 0; i < *point_num; i++) {
-    x[i] = XY_Coordinate[i].x_position;
-    y[i] = XY_Coordinate[i].y_position;
-    // strength[i] = XY_Coordinate[i].finger_id;
+    // Mapeo Matemático Directo para Landscape 1280x800
+    // Basado en límites físicos observados:
+    // Sensor X: 8 (Bajo) a 785 (Alto) -> Se mapea a Pantalla Y (800 a 0)
+    // Sensor Y: 14 (Bajo) a 1275 (Alto) -> Se mapea a Pantalla X (1280 a 0)
+
+    int32_t raw_x = XY_Coordinate[i].x_position;
+    int32_t raw_y = XY_Coordinate[i].y_position;
+
+    // MAPEÓ MATEMÁTICO REAL (Landscape 1280x800)
+    // Sensor Y (Largo 1275->14) mapea a la Horizontal (0->1280)
+    // Sensor X (Corto 785->8) mapea a la Vertical (0->800)
+
+    // MAPEÓ MATEMÁTICO REAL - PRECISIÓN ABSOLUTA
+    // RY: 845 (Izq/0) -> 23 (Der/1280)
+    // RX: 823 (Arr/0) -> 10 (Aba/800)
+
+    int32_t final_x = 1280 * (845 - raw_y) / (845 - 23);
+    int32_t final_y = 800 * (823 - raw_x) / (823 - 10);
+
+    // Clamping de seguridad
+    if (final_x < 0)
+      final_x = 0;
+    if (final_x > 1280)
+      final_x = 1280;
+    if (final_y < 0)
+      final_y = 0;
+    if (final_y > 800)
+      final_y = 800;
+
+    x[i] = (uint16_t)final_x;
+    y[i] = (uint16_t)final_y;
+
+    if (strength) {
+      strength[i] = 0;
+    }
   }
 
   portEXIT_CRITICAL(&tp->data.lock);

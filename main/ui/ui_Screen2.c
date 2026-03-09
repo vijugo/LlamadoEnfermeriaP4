@@ -4,6 +4,7 @@
 // Project name: LlamadoEnfermeria
 
 #include "esp_log.h"
+#include "psram_images.h"
 #include "ui.h"
 
 lv_obj_t *ui_Screen2 = NULL;
@@ -32,7 +33,7 @@ void ui_event_Button1(lv_event_t *e) {
 void ui_Screen2_screen_init(void) {
   ui_Screen2 = lv_obj_create(NULL);
   lv_obj_remove_flag(ui_Screen2, LV_OBJ_FLAG_SCROLLABLE); /// Flags
-  lv_obj_set_style_bg_image_src(ui_Screen2, &ui_img_espera_png,
+  lv_obj_set_style_bg_image_src(ui_Screen2, img_espera,
                                 LV_PART_MAIN | LV_STATE_DEFAULT);
 
   ui_Label2 = lv_label_create(ui_Screen2);
@@ -80,7 +81,7 @@ void ui_Screen2_screen_init(void) {
   lv_obj_add_flag(ui_Button1, LV_OBJ_FLAG_SCROLL_ON_FOCUS); /// Flags
   lv_obj_remove_flag(ui_Button1, LV_OBJ_FLAG_SCROLLABLE);   /// Flags
   lv_obj_set_style_radius(ui_Button1, 200, LV_PART_MAIN | LV_STATE_DEFAULT);
-  lv_obj_set_style_bg_image_src(ui_Button1, &ui_img_gear_8248448_png,
+  lv_obj_set_style_bg_image_src(ui_Button1, img_gear,
                                 LV_PART_MAIN | LV_STATE_DEFAULT);
 
   ui_Label5 = lv_label_create(ui_Screen2);

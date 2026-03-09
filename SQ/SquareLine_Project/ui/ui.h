@@ -35,8 +35,8 @@ LV_IMG_DECLARE( ui_img_b_llamado_png);   // assets/B_Llamado.png
 LV_IMG_DECLARE( ui_img_b_historial_png);   // assets/B_Historial.png
 LV_IMG_DECLARE( ui_img_b_configuracion_png);   // assets/B_Configuracion.png
 LV_IMG_DECLARE( ui_img_fondohospital_png);   // assets/FondoHospital.png
-LV_IMG_DECLARE( ui_img_botongrandeerror_png);   // assets/BotonGrandeError.png
-LV_IMG_DECLARE( ui_img_botongrandeok_png);   // assets/BotonGrandeOK.png
+LV_IMG_DECLARE( ui_img_2_png);   // assets/2.png
+LV_IMG_DECLARE( ui_img_3_png);   // assets/3.png
 
 // FONTS
 LV_FONT_DECLARE( ui_font_Montserrat160);

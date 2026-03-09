@@ -182,11 +182,11 @@ void ui_set_config_values(int day, int month, int year, int hour, int minute,
                           int volume) {
   if (lvgl_port_lock(0)) {
     if (ui_Screen4 != NULL) {
-      lv_roller_set_selected(ui_Roller1, day - 1, LV_ANIM_OFF);
-      lv_roller_set_selected(ui_Roller2, month - 1, LV_ANIM_OFF);
-      lv_roller_set_selected(ui_Roller3, year - 2026, LV_ANIM_OFF);
-      lv_roller_set_selected(ui_Roller4, hour, LV_ANIM_OFF);
-      lv_roller_set_selected(ui_Roller5, minute, LV_ANIM_OFF);
+      lv_roller_set_selected(ui_Roller1, 31 - day, LV_ANIM_OFF);
+      lv_roller_set_selected(ui_Roller2, 12 - month, LV_ANIM_OFF);
+      lv_roller_set_selected(ui_Roller3, 2033 - year, LV_ANIM_OFF);
+      lv_roller_set_selected(ui_Roller4, 23 - hour, LV_ANIM_OFF);
+      lv_roller_set_selected(ui_Roller5, 59 - minute, LV_ANIM_OFF);
       lv_slider_set_value(ui_Slider1, volume, LV_ANIM_OFF);
 
       char buf[16];
@@ -209,11 +209,11 @@ void ui_get_config_values(int *day, int *month, int *year, int *hour,
                           int *minute, int *volume) {
   if (lvgl_port_lock(0)) {
     if (ui_Screen4 != NULL) {
-      *day = lv_roller_get_selected(ui_Roller1) + 1;
-      *month = lv_roller_get_selected(ui_Roller2) + 1;
-      *year = lv_roller_get_selected(ui_Roller3) + 2026;
-      *hour = lv_roller_get_selected(ui_Roller4);
-      *minute = lv_roller_get_selected(ui_Roller5);
+      *day = 31 - lv_roller_get_selected(ui_Roller1);
+      *month = 12 - lv_roller_get_selected(ui_Roller2);
+      *year = 2033 - lv_roller_get_selected(ui_Roller3);
+      *hour = 23 - lv_roller_get_selected(ui_Roller4);
+      *minute = 59 - lv_roller_get_selected(ui_Roller5);
       *volume = lv_slider_get_value(ui_Slider1);
     }
     lvgl_port_unlock();

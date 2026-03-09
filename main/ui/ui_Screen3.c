@@ -3,89 +3,94 @@
 // LVGL version: 9.3
 // Project name: LlamadoEnfermeria
 
+#include "psram_images.h"
 #include "ui.h"
 
-lv_obj_t *ui_Screen3 = NULL;lv_obj_t *ui_Button2 = NULL;lv_obj_t *ui_Button3 = NULL;lv_obj_t *ui_Button4 = NULL;
+lv_obj_t *ui_Screen3 = NULL;
+lv_obj_t *ui_Button2 = NULL;
+lv_obj_t *ui_Button3 = NULL;
+lv_obj_t *ui_Button4 = NULL;
 // event funtions
-void ui_event_Button2( lv_event_t * e) {
-    lv_event_code_t event_code = lv_event_get_code(e);
+void ui_event_Button2(lv_event_t *e) {
+  lv_event_code_t event_code = lv_event_get_code(e);
 
-if ( event_code == LV_EVENT_CLICKED) {
-      Funcion_Retornar_Llamado( e );
-}
-}
-
-void ui_event_Button3( lv_event_t * e) {
-    lv_event_code_t event_code = lv_event_get_code(e);
-
-if ( event_code == LV_EVENT_CLICKED) {
-      Funcion_Historial( e );
-}
+  if (event_code == LV_EVENT_CLICKED) {
+    Funcion_Retornar_Llamado(e);
+  }
 }
 
-void ui_event_Button4( lv_event_t * e) {
-    lv_event_code_t event_code = lv_event_get_code(e);
+void ui_event_Button3(lv_event_t *e) {
+  lv_event_code_t event_code = lv_event_get_code(e);
 
-if ( event_code == LV_EVENT_CLICKED) {
-      Funcion_Configura_Parmetros( e );
+  if (event_code == LV_EVENT_CLICKED) {
+    Funcion_Historial(e);
+  }
 }
+
+void ui_event_Button4(lv_event_t *e) {
+  lv_event_code_t event_code = lv_event_get_code(e);
+
+  if (event_code == LV_EVENT_CLICKED) {
+    Funcion_Configura_Parmetros(e);
+  }
 }
 
 // build funtions
 
-void ui_Screen3_screen_init(void)
-{
-ui_Screen3 = lv_obj_create(NULL);
-lv_obj_remove_flag( ui_Screen3, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
-lv_obj_set_style_bg_image_src( ui_Screen3, &ui_img_f_configura_png, LV_PART_MAIN | LV_STATE_DEFAULT );
+void ui_Screen3_screen_init(void) {
+  ui_Screen3 = lv_obj_create(NULL);
+  lv_obj_remove_flag(ui_Screen3, LV_OBJ_FLAG_SCROLLABLE); /// Flags
+  lv_obj_set_style_bg_image_src(ui_Screen3, img_f_configura,
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
 
-ui_Button2 = lv_button_create(ui_Screen3);
-lv_obj_set_width( ui_Button2, 205);
-lv_obj_set_height( ui_Button2, 207);
-lv_obj_set_x( ui_Button2, -377 );
-lv_obj_set_y( ui_Button2, 4 );
-lv_obj_set_align( ui_Button2, LV_ALIGN_CENTER );
-lv_obj_add_flag( ui_Button2, LV_OBJ_FLAG_SCROLL_ON_FOCUS );   /// Flags
-lv_obj_remove_flag( ui_Button2, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
-lv_obj_set_style_radius(ui_Button2, 205, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_bg_image_src( ui_Button2, &ui_img_b_llamado_png, LV_PART_MAIN | LV_STATE_DEFAULT );
+  ui_Button2 = lv_button_create(ui_Screen3);
+  lv_obj_set_width(ui_Button2, 205);
+  lv_obj_set_height(ui_Button2, 207);
+  lv_obj_set_x(ui_Button2, -377);
+  lv_obj_set_y(ui_Button2, 4);
+  lv_obj_set_align(ui_Button2, LV_ALIGN_CENTER);
+  lv_obj_add_flag(ui_Button2, LV_OBJ_FLAG_SCROLL_ON_FOCUS); /// Flags
+  lv_obj_remove_flag(ui_Button2, LV_OBJ_FLAG_SCROLLABLE);   /// Flags
+  lv_obj_set_style_radius(ui_Button2, 205, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_bg_image_src(ui_Button2, img_b_llamado,
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
 
-ui_Button3 = lv_button_create(ui_Screen3);
-lv_obj_set_width( ui_Button3, 205);
-lv_obj_set_height( ui_Button3, 207);
-lv_obj_set_x( ui_Button3, -4 );
-lv_obj_set_y( ui_Button3, 5 );
-lv_obj_set_align( ui_Button3, LV_ALIGN_CENTER );
-lv_obj_add_flag( ui_Button3, LV_OBJ_FLAG_SCROLL_ON_FOCUS );   /// Flags
-lv_obj_remove_flag( ui_Button3, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
-lv_obj_set_style_radius(ui_Button3, 205, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_bg_image_src( ui_Button3, &ui_img_b_historial_png, LV_PART_MAIN | LV_STATE_DEFAULT );
+  ui_Button3 = lv_button_create(ui_Screen3);
+  lv_obj_set_width(ui_Button3, 205);
+  lv_obj_set_height(ui_Button3, 207);
+  lv_obj_set_x(ui_Button3, -4);
+  lv_obj_set_y(ui_Button3, 5);
+  lv_obj_set_align(ui_Button3, LV_ALIGN_CENTER);
+  lv_obj_add_flag(ui_Button3, LV_OBJ_FLAG_SCROLL_ON_FOCUS); /// Flags
+  lv_obj_remove_flag(ui_Button3, LV_OBJ_FLAG_SCROLLABLE);   /// Flags
+  lv_obj_set_style_radius(ui_Button3, 205, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_bg_image_src(ui_Button3, img_b_historial,
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
 
-ui_Button4 = lv_button_create(ui_Screen3);
-lv_obj_set_width( ui_Button4, 205);
-lv_obj_set_height( ui_Button4, 207);
-lv_obj_set_x( ui_Button4, 371 );
-lv_obj_set_y( ui_Button4, 5 );
-lv_obj_set_align( ui_Button4, LV_ALIGN_CENTER );
-lv_obj_add_flag( ui_Button4, LV_OBJ_FLAG_SCROLL_ON_FOCUS );   /// Flags
-lv_obj_remove_flag( ui_Button4, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
-lv_obj_set_style_radius(ui_Button4, 205, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_bg_image_src( ui_Button4, &ui_img_b_configuracion_png, LV_PART_MAIN | LV_STATE_DEFAULT );
+  ui_Button4 = lv_button_create(ui_Screen3);
+  lv_obj_set_width(ui_Button4, 205);
+  lv_obj_set_height(ui_Button4, 207);
+  lv_obj_set_x(ui_Button4, 371);
+  lv_obj_set_y(ui_Button4, 5);
+  lv_obj_set_align(ui_Button4, LV_ALIGN_CENTER);
+  lv_obj_add_flag(ui_Button4, LV_OBJ_FLAG_SCROLL_ON_FOCUS); /// Flags
+  lv_obj_remove_flag(ui_Button4, LV_OBJ_FLAG_SCROLLABLE);   /// Flags
+  lv_obj_set_style_radius(ui_Button4, 205, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_bg_image_src(ui_Button4, img_b_configuracion,
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
 
-lv_obj_add_event_cb(ui_Button2, ui_event_Button2, LV_EVENT_ALL, NULL);
-lv_obj_add_event_cb(ui_Button3, ui_event_Button3, LV_EVENT_ALL, NULL);
-lv_obj_add_event_cb(ui_Button4, ui_event_Button4, LV_EVENT_ALL, NULL);
-
+  lv_obj_add_event_cb(ui_Button2, ui_event_Button2, LV_EVENT_ALL, NULL);
+  lv_obj_add_event_cb(ui_Button3, ui_event_Button3, LV_EVENT_ALL, NULL);
+  lv_obj_add_event_cb(ui_Button4, ui_event_Button4, LV_EVENT_ALL, NULL);
 }
 
-void ui_Screen3_screen_destroy(void)
-{
-   if (ui_Screen3) lv_obj_del(ui_Screen3);
+void ui_Screen3_screen_destroy(void) {
+  if (ui_Screen3)
+    lv_obj_del(ui_Screen3);
 
-// NULL screen variables
-ui_Screen3= NULL;
-ui_Button2= NULL;
-ui_Button3= NULL;
-ui_Button4= NULL;
-
+  // NULL screen variables
+  ui_Screen3 = NULL;
+  ui_Button2 = NULL;
+  ui_Button3 = NULL;
+  ui_Button4 = NULL;
 }

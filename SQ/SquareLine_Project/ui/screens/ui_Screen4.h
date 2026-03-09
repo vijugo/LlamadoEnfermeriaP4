@@ -15,10 +15,6 @@ extern void ui_Screen4_screen_init(void);
 extern void ui_Screen4_screen_destroy(void);
 extern lv_obj_t *ui_Screen4;
 extern lv_obj_t *ui_Slider1;
-extern void ui_event_ImgButton1( lv_event_t * e);
-extern lv_obj_t *ui_ImgButton1;
-extern void ui_event_ImgButton2( lv_event_t * e);
-extern lv_obj_t *ui_ImgButton2;
 extern lv_obj_t *ui_Label8;
 extern lv_obj_t *ui_Container1;
 extern lv_obj_t *ui_Roller1;
@@ -28,6 +24,10 @@ extern lv_obj_t *ui_Roller4;
 extern lv_obj_t *ui_Roller5;
 extern lv_obj_t *ui_Label9;
 extern lv_obj_t *ui_Label10;
+extern void ui_event_Button5( lv_event_t * e);
+extern lv_obj_t *ui_Button5;
+extern void ui_event_Button6( lv_event_t * e);
+extern lv_obj_t *ui_Button6;
 // CUSTOM VARIABLES
 
 #ifdef __cplusplus

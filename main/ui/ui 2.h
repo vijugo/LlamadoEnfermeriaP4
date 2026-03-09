@@ -1,0 +1,25 @@
+#ifndef _UI_H
+#define _UI_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "lvgl.h"
+
+void ui_init(void);
+void ui_set_wifi_status(bool connected, const char *ssid);
+
+// Pantallas para la máquina de estados
+LV_IMAGE_DECLARE(img_plantilla_base);
+LV_IMAGE_DECLARE(img_espera_llamado);
+
+void ui_show_screen_arranque(const char *version, const char *fecha);
+void ui_show_screen_espera(void);
+void ui_update_espera_data(bool wifi_ok, bool sd_ok);
+
+#ifdef __cplusplus
+} /*extern "C"*/
+#endif
+
+#endif

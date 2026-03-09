@@ -14,8 +14,8 @@ SET(SOURCES screens/ui_Screen1.c
     images/ui_img_b_historial_png.c
     images/ui_img_b_configuracion_png.c
     images/ui_img_fondohospital_png.c
-    images/ui_img_botongrandeerror_png.c
-    images/ui_img_botongrandeok_png.c
+    images/ui_img_2_png.c
+    images/ui_img_3_png.c
     fonts/ui_font_Montserrat160.c)
 
 add_library(ui ${SOURCES})

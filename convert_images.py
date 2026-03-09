@@ -1,39 +1,44 @@
-from PIL import Image
-import sys
 import os
+import re
 
-def convert_to_rgb565_c(img_path, var_name, out_path):
-    img = Image.open(img_path).convert('RGB')
-    w, h = img.size
+def convert():
+    ui_dir = "main/ui"
+    data_dir = "data"
     
-    with open(out_path, 'w') as f:
-        f.write('#include "lvgl.h"\n\n')
-        f.write(f'const uint8_t {var_name}_map[] = {{\n')
-        
-        pixel_data = list(img.getdata())
-        for i, (r, g, b) in enumerate(pixel_data):
-            # RGB565 (16 bit) - Standard format for LVGL
-            # Low 5 bits b, middle 6 bits g, high 5 bits r.
-            # In memory ESP32: Little Endian - byte0=G[2:0]B[4:0], byte1=R[4:0]G[5:3]
-            # LVGL expects the raw byte array
-            # We'll use RGB565 format (2 bytes per pixel)
-            c = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | ((b & 0xF8) >> 3)
-            b0 = c & 0xFF
-            b1 = (c >> 8) & 0xFF
-            
-            f.write(f"0x{b0:02x}, 0x{b1:02x}, ")
-            if (i + 1) % 12 == 0:
-                f.write("\n  ")
-        
-        f.write('\n};\n\n')
-        f.write(f'const lv_image_dsc_t {var_name} = {{\n')
-        f.write('  .header.cf = LV_COLOR_FORMAT_RGB565,\n')
-        f.write('  .header.magic = LV_IMAGE_HEADER_MAGIC,\n')
-        f.write(f'  .header.w = {w},\n')
-        f.write(f'  .header.h = {h},\n')
-        f.write(f'  .data_size = {w * h * 2},\n')
-        f.write(f'  .data = {var_name}_map,\n')
-        f.write('};\n')
+    if not os.path.exists(data_dir):
+        os.makedirs(data_dir)
+        print(f"Directorio creado: {data_dir}")
 
-convert_to_rgb565_c("Imagenes/Plantilla.png", "img_plantilla_full", "main/ui/plantilla_full.c")
-convert_to_rgb565_c("Imagenes/EsperaLlamado.png", "img_espera_full", "main/ui/espera_full.c")
+    # Buscar archivos de imagen .c
+    files = [f for f in os.listdir(ui_dir) if f.startswith("ui_img_") and f.endswith(".c")]
+    
+    for filename in files:
+        filepath = os.path.join(ui_dir, filename)
+        # Nombre simplificado para el archivo binario
+        bin_name = filename.replace("ui_img_", "").replace("_png.c", ".bin").lower()
+        bin_filepath = os.path.join(data_dir, bin_name)
+        
+        print(f"Procesando {filename} -> {bin_name}...")
+        
+        try:
+            with open(filepath, 'r', encoding='latin-1') as f:
+                content = f.read()
+                
+            # Buscar el array de datos
+            match = re.search(r'data\[\]\s*=\s*\{(.*?)\};', content, re.DOTALL)
+            if match:
+                hex_data = match.group(1)
+                # Extraer los bytes
+                bytes_list = re.findall(r'0[xX][0-9a-fA-F]+', hex_data)
+                
+                with open(bin_filepath, 'wb') as bin_f:
+                    byte_array = bytearray([int(b, 16) for b in bytes_list])
+                    bin_f.write(byte_array)
+                print(f"  -> OK: {len(byte_array)} bytes")
+            else:
+                print(f"  !! Error: No se encontró array en {filename}")
+        except Exception as e:
+            print(f"  !! Error procesando {filename}: {e}")
+
+if __name__ == "__main__":
+    convert()
