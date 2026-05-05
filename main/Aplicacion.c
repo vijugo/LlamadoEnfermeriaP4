@@ -84,6 +84,13 @@ void aplicacion_loop_task(void *pvParameters) {
         ticks_en_estado = 0;
         F_Configura_Parmetros = false;
       }
+
+      if (F_Historial) {
+        ESP_LOGI(TAG, "Evento: F_Historial detectado.");
+        estado_actual = ST_APLICACION_HISTORIAL;
+        ticks_en_estado = 0;
+        F_Historial = false;
+      }
       break;
 
     case ST_APLICACION_CONFIGURAR_PARAMETROS:
@@ -145,8 +152,33 @@ void aplicacion_loop_task(void *pvParameters) {
       }
       break;
 
+    case ST_APLICACION_HISTORIAL:
+      if (ticks_en_estado == 1) {
+        ESP_LOGI(TAG, "Estado: HISTORIAL. (Pantalla en desarrollo)");
+        // Por ahora volvemos a PARA después de 3 segundos
+      }
+      if (ticks_en_estado >= 30) {
+        ESP_LOGI(TAG, "Volviendo a PARA desde HISTORIAL.");
+        estado_actual = ST_APLICACION_PARA;
+        ticks_en_estado = 0;
+        ui_show_screen_para();
+      }
+      break;
+
     case ST_APLICACION_RETARDO:
+      break;
+
     case ST_APLICACION_TEXTOSPEECH:
+      if (ticks_en_estado == 1) {
+        ESP_LOGI(TAG, "Estado: TEXTOSPEECH. Iniciando motor de voz...");
+      }
+      // Placeholder for TTS logic
+      if (ticks_en_estado >= 20) {
+        estado_actual = ST_APLICACION_ESPERA;
+        ticks_en_estado = 0;
+      }
+      break;
+
     case ST_APLICACION_PRUEBA:
     default:
       break;

@@ -122,7 +122,23 @@ static void global_touch_monitor_cb(lv_event_t *e) {
     lv_indev_t *indev = lv_indev_get_act();
     lv_point_t p;
     lv_indev_get_point(indev, &p);
-    ESP_LOGW("TOUCH_HW", "SCREEN TOUCH at X:%d, Y:%d", (int)p.x, (int)p.y);
+
+    lv_obj_t *target = lv_event_get_target(e);
+    lv_area_t a;
+    lv_obj_get_coords(target, &a);
+
+    const char *name = "FONDO/OTRO";
+    if (target == ui_Button1)
+      name = "BOTON_CONFIG_PRINCIPAL";
+    else if (target == ui_Button2)
+      name = "BTN_HISTORIAL";
+    else if (target == ui_Button3)
+      name = "BTN_CONFIGURACION";
+    else if (target == ui_Button4)
+      name = "BTN_LLAMADO";
+
+    ESP_LOGW("TELEMETRIA", "TOQUE[%s] en X:%d, Y:%d | OBJ_X:%d, OBJ_Y:%d", name,
+             (int)p.x, (int)p.y, (int)a.x1, (int)a.y1);
   }
 }
 
@@ -158,6 +174,12 @@ void ui_show_screen_para(void) {
       ESP_LOGI("UI_HELPERS", "Initializing Screen3...");
       ui_Screen3_screen_init();
     }
+
+    // Monitor global de toques para Screen3
+    lv_obj_remove_event_cb(ui_Screen3, global_touch_monitor_cb);
+    lv_obj_add_event_cb(ui_Screen3, global_touch_monitor_cb, LV_EVENT_PRESSED,
+                        NULL);
+
     ESP_LOGI("UI_HELPERS", "Loading Screen3...");
     lv_disp_load_scr(ui_Screen3);
     ESP_LOGW("MEM", "After Screen3 - Free: %u, Internal Free: %u",
@@ -180,18 +202,44 @@ void ui_show_screen_config_parametros(void) {
 
 void ui_set_config_values(int day, int month, int year, int hour, int minute,
                           int volume) {
+  ESP_LOGI("UI_DEBUG", "Set Config: %02d/%02d/%d %02d:%02d Vol:%d", day, month,
+           year, hour, minute, volume);
+
   if (lvgl_port_lock(0)) {
     if (ui_Screen4 != NULL) {
-      lv_roller_set_selected(ui_Roller1, 31 - day, LV_ANIM_OFF);
-      lv_roller_set_selected(ui_Roller2, 12 - month, LV_ANIM_OFF);
-      lv_roller_set_selected(ui_Roller3, 2033 - year, LV_ANIM_OFF);
+      // Protección de seguridad contra índices fuera de rango (causa de los
+      // resets)
+      int d_idx = 31 - day;
+      if (d_idx < 0)
+        d_idx = 0;
+      if (d_idx > 30)
+        d_idx = 30;
+      int m_idx = 12 - month;
+      if (m_idx < 0)
+        m_idx = 0;
+      if (m_idx > 11)
+        m_idx = 11;
+      int y_idx = 2033 - year;
+      if (y_idx < 0)
+        y_idx = 0;
+      if (y_idx > 7)
+        y_idx = 7;
+
+      ESP_LOGI("UI_DEBUG",
+               "Actualizando rollers con indices seguros: D:%d M:%d Y:%d",
+               d_idx, m_idx, y_idx);
+      lv_roller_set_selected(ui_Roller1, d_idx, LV_ANIM_OFF);
+      lv_roller_set_selected(ui_Roller2, m_idx, LV_ANIM_OFF);
+      lv_roller_set_selected(ui_Roller3, y_idx, LV_ANIM_OFF);
       lv_roller_set_selected(ui_Roller4, 23 - hour, LV_ANIM_OFF);
       lv_roller_set_selected(ui_Roller5, 59 - minute, LV_ANIM_OFF);
+
       lv_slider_set_value(ui_Slider1, volume, LV_ANIM_OFF);
 
       char buf[16];
       snprintf(buf, sizeof(buf), "%d %%", volume);
       lv_label_set_text(ui_Label10, buf);
+      ESP_LOGI("UI_DEBUG", "Update complete.");
     }
     lvgl_port_unlock();
   }

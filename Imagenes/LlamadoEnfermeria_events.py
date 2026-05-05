@@ -26,3 +26,7 @@ def F_Salir_Parametros(event_struct):
 def Funcion_Grabar_Parametros(event_struct):
     return
 
+
+def Funcion_Salir_Parametros(event_struct):
+    return
+

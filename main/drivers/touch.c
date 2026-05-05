@@ -80,8 +80,8 @@ void touch_init(void) {
     };
 
     esp_lcd_touch_config_t tp_cfg = {
-        .x_max = 1500,
-        .y_max = 1500,
+        .x_max = 800,
+        .y_max = 1280,
         .rst_gpio_num = TOUCH_PIN_RST,
         .int_gpio_num = TOUCH_PIN_INT,
         .flags =

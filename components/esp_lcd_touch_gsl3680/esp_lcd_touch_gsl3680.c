@@ -11,6 +11,7 @@
 #include "freertos/task.h"
 #include "gsl_point_id.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define TAG "gsl3680"
@@ -420,50 +421,43 @@ static bool esp_lcd_touch_gsl3680_get_xy(esp_lcd_touch_handle_t tp, uint16_t *x,
   assert(max_point_num > 0);
 
   portENTER_CRITICAL(&tp->data.lock);
+  *point_num = (Finger_num > max_point_num) ? max_point_num : Finger_num;
 
-  if (max_point_num > Finger_num)
-    *point_num = Finger_num;
-  else
-    *point_num = max_point_num;
+  static int32_t last_fy = -1;
+
   for (int i = 0; i < *point_num; i++) {
-    // Mapeo Matemático Directo para Landscape 1280x800
-    // Basado en límites físicos observados:
-    // Sensor X: 8 (Bajo) a 785 (Alto) -> Se mapea a Pantalla Y (800 a 0)
-    // Sensor Y: 14 (Bajo) a 1275 (Alto) -> Se mapea a Pantalla X (1280 a 0)
+    int32_t rx = XY_Coordinate[i].x_position;
+    int32_t ry = XY_Coordinate[i].y_position;
 
-    int32_t raw_x = XY_Coordinate[i].x_position;
-    int32_t raw_y = XY_Coordinate[i].y_position;
+    // CALIBRACIÓN DE PRECISIÓN (171->1120px | 845->105px)
+    int32_t fx = 800 * (844 - rx) / 844;
+    int32_t fy = (138000 - 151 * ry) / 100;
 
-    // MAPEÓ MATEMÁTICO REAL (Landscape 1280x800)
-    // Sensor Y (Largo 1275->14) mapea a la Horizontal (0->1280)
-    // Sensor X (Corto 785->8) mapea a la Vertical (0->800)
-
-    // MAPEÓ MATEMÁTICO REAL - PRECISIÓN ABSOLUTA
-    // RY: 845 (Izq/0) -> 23 (Der/1280)
-    // RX: 823 (Arr/0) -> 10 (Aba/800)
-
-    int32_t final_x = 1280 * (845 - raw_y) / (845 - 23);
-    int32_t final_y = 800 * (823 - raw_x) / (823 - 10);
-
-    // Clamping de seguridad
-    if (final_x < 0)
-      final_x = 0;
-    if (final_x > 1280)
-      final_x = 1280;
-    if (final_y < 0)
-      final_y = 0;
-    if (final_y > 800)
-      final_y = 800;
-
-    x[i] = (uint16_t)final_x;
-    y[i] = (uint16_t)final_y;
-
-    if (strength) {
-      strength[i] = 0;
+    // FILTRO DE PROTECCIÓN (Evita reinicios por saturación)
+    if (last_fy != -1 && abs(fy - last_fy) < 3) {
+      fy = last_fy;
     }
-  }
+    last_fy = fy;
 
+    if (fx < 0)
+      fx = 0;
+    else if (fx > 799)
+      fx = 799;
+    if (fy < 0)
+      fy = 0;
+    else if (fy > 1279)
+      fy = 1279;
+
+    x[i] = (uint16_t)fx;
+    y[i] = (uint16_t)fy;
+    if (strength)
+      strength[i] = 0;
+  }
   portEXIT_CRITICAL(&tp->data.lock);
+
+  if (*point_num > 0) {
+    ESP_LOGI("SENSOR", "TOQUE_X: %u", x[0]);
+  }
 
   return (*point_num > 0);
 }
